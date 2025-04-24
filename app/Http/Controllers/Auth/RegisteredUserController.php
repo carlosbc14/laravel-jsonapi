@@ -19,21 +19,26 @@ class RegisteredUserController extends Controller
     public function store(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:' . User::class],
-            'password' => ['required', 'string', 'confirmed', Rules\Password::defaults()],
+            'data.attributes.name' => ['required', 'string', 'max:255'],
+            'data.attributes.email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:' . User::class . ',email'],
+            'data.attributes.password' => ['required', 'string', 'confirmed', Rules\Password::defaults()],
         ]);
 
         $user = User::create([
-            'name' => $validated['name'],
-            'email' => $validated['email'],
-            'password' => Hash::make($validated['password']),
+            'name' => $validated['data.attributes.name'],
+            'email' => $validated['data.attributes.email'],
+            'password' => Hash::make($validated['data.attributes.password']),
         ]);
 
         $token = $user->createToken('api-token');
 
         return response()->json([
-            'token' => $token->plainTextToken,
+            'data' => [
+                'type' => 'tokens',
+                'attributes' => [
+                    'token' => $token->plainTextToken,
+                ],
+            ],
         ], 201);
     }
 }

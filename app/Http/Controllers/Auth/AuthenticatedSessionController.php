@@ -17,13 +17,16 @@ class AuthenticatedSessionController extends Controller
     public function store(Request $request): JsonResponse
     {
         $credentials = $request->validate([
-            'email' => ['required', 'string', 'email'],
-            'password' => ['required', 'string'],
+            'data.attributes.email' => ['required', 'string', 'email'],
+            'data.attributes.password' => ['required', 'string'],
         ]);
 
-        if (!Auth::attempt($credentials)) {
+        $email = $credentials['data']['attributes']['email'];
+        $password = $credentials['data']['attributes']['password'];
+
+        if (!Auth::attempt(['email' => $email, 'password' => $password])) {
             throw ValidationException::withMessages([
-                'email' => [__('auth.failed')],
+                'data.attributes.email' => [__('auth.failed')],
             ]);
         }
 
@@ -31,7 +34,12 @@ class AuthenticatedSessionController extends Controller
         $token = $user->createToken('api-token');
 
         return response()->json([
-            'token' => $token->plainTextToken,
+            'data' => [
+                'type' => 'tokens',
+                'attributes' => [
+                    'token' => $token->plainTextToken,
+                ],
+            ],
         ]);
     }
 
