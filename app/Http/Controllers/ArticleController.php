@@ -20,7 +20,7 @@ class ArticleController extends Controller
             ['title', 'slug', 'content', 'created_at', 'updated_at']
         );
 
-        return ArticleCollection::make($articles);
+        return ArticleCollection::make($articles->jsonApiPaginate());
     }
 
     /**

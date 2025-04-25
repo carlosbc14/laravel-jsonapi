@@ -38,5 +38,15 @@ class JsonApiServiceProvider extends ServiceProvider
 
             return $this;
         });
+
+        Builder::macro('jsonApiPaginate', function (): LengthAwarePaginator {
+            /** @var Builder $this */
+            return $this->paginate(
+                request()->input('page.size', 15),
+                ['*'],
+                'page[number]',
+                request()->input('page.number', 1)
+            )->appends(request()->except('page.number'));
+        });
     }
 }
