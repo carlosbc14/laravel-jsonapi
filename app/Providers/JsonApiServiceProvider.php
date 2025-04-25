@@ -39,6 +39,31 @@ class JsonApiServiceProvider extends ServiceProvider
             return $this;
         });
 
+        Builder::macro('jsonApiFilter', function (array $allowedFilters = []): Builder {
+            /** @var Builder $this */
+            $filters = request()->input('filter', []);
+            $operators = ['eq' => '=', 'gt' => '>', 'lt' => '<', 'gte' => '>=', 'lte' => '<='];
+
+            foreach ($filters as $filterField => $filterValue) {
+                abort_unless(empty($allowedFilters) || in_array($filterField, $allowedFilters), 400, 'Invalid filter field.');
+
+                if (is_array($filterValue)) {
+                    foreach ($filterValue as $op => $value) {
+                        if (array_key_exists($op, $operators)) {
+                            strtotime($value) !== false
+                                ? $this->whereDate($filterField, $operators[$op], $value)
+                                : $this->where($filterField, $operators[$op], $value);
+                        }
+                    }
+                    continue;
+                }
+
+                $this->where($filterField, 'LIKE', "%$filterValue%");
+            }
+
+            return $this;
+        });
+
         Builder::macro('jsonApiPaginate', function (): LengthAwarePaginator {
             /** @var Builder $this */
             return $this->paginate(

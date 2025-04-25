@@ -18,6 +18,8 @@ class ArticleController extends Controller
         /** @var \Illuminate\Database\Eloquent\Builder $articles */
         $articles = Article::jsonApiSort(
             ['title', 'slug', 'content', 'created_at', 'updated_at']
+        )->jsonApiFilter(
+            ['title', 'slug', 'content', 'created_at', 'updated_at']
         );
 
         return ArticleCollection::make($articles->jsonApiPaginate());
