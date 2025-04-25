@@ -15,7 +15,10 @@ class ArticleController extends Controller
      */
     public function index(): ArticleCollection
     {
-        $articles = Article::all();
+        /** @var \Illuminate\Database\Eloquent\Builder $articles */
+        $articles = Article::jsonApiSort(
+            ['title', 'slug', 'content', 'created_at', 'updated_at']
+        );
 
         return ArticleCollection::make($articles);
     }
