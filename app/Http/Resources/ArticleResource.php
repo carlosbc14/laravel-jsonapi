@@ -17,13 +17,20 @@ class ArticleResource extends JsonResource
         return [
             'type' => 'articles',
             'id' => (string) $this->getRouteKey(),
-            'attributes' => [
+            'attributes' => array_filter([
                 'title' => $this->title,
                 'slug' => $this->slug,
                 'content' => $this->content,
                 'created_at' => $this->created_at,
                 'updated_at' => $this->updated_at,
-            ],
+            ], function ($value) use ($request) {
+                if (!$request->filled('fields')) return true;
+
+                $fields = explode(',', $request->input('fields.articles', ''));
+                if ($value === $this->getRouteKey()) return in_array($this->getRouteKeyName(), $fields);
+
+                return $value;
+            }),
             'links' => [
                 'self' => route('articles.show', $this->getRouteKey()),
             ],

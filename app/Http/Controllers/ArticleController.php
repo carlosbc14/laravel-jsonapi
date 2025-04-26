@@ -16,11 +16,9 @@ class ArticleController extends Controller
     public function index(): ArticleCollection
     {
         /** @var \Illuminate\Database\Eloquent\Builder $articles */
-        $articles = Article::jsonApiSort(
-            ['title', 'slug', 'content', 'created_at', 'updated_at']
-        )->jsonApiFilter(
-            ['title', 'slug', 'content', 'created_at', 'updated_at']
-        );
+        $articles = Article::jsonApiFields('articles', ['title', 'slug', 'content', 'created_at', 'updated_at'])
+            ->jsonApiSort(['title', 'slug', 'content', 'created_at', 'updated_at'])
+            ->jsonApiFilter(['title', 'slug', 'content', 'created_at', 'updated_at']);
 
         return ArticleCollection::make($articles->jsonApiPaginate());
     }
