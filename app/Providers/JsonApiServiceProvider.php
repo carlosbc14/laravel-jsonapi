@@ -21,23 +21,6 @@ class JsonApiServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        Builder::macro('jsonApiFields', function (string $resourceType, array $allowedFields = []): Builder {
-            /** @var Builder $this */
-            if (!request()->filled("fields.$resourceType")) return $this;
-
-            $fields = array_map(function ($field) use ($allowedFields) {
-                abort_unless(empty($allowedFields) || in_array($field, $allowedFields), 400, 'Invalid field.');
-                return $field;
-            }, explode(',', request()->input("fields.$resourceType")));
-
-            /** @var \Illuminate\Database\Eloquent\Model $model */
-            $model = $this->getModel();
-            $routeKeyName = $model->getRouteKeyName();
-            if (!in_array($routeKeyName, $fields)) $fields[] = $routeKeyName;
-
-            return $this->addSelect($fields);
-        });
-
         Builder::macro('jsonApiSort', function (array $allowedSorts = []): Builder {
             /** @var Builder $this */
             if (!request()->filled('sort')) return $this;

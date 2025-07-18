@@ -5,7 +5,7 @@ namespace App\Http\Resources;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\ResourceCollection;
 
-class ArticleCollection extends ResourceCollection
+class JsonApiCollection extends ResourceCollection
 {
     /**
      * Transform the resource collection into an array.
@@ -17,7 +17,7 @@ class ArticleCollection extends ResourceCollection
         return [
             'data' => $this->collection,
             'links' => [
-                'self' => route('articles.index', $request->query()),
+                'self' => $this->resource->path(),
             ],
         ];
     }

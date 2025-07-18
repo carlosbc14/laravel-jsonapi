@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Resources\ArticleCollection;
-use App\Http\Resources\ArticleResource;
+use App\Http\Resources\JsonApiCollection;
+use App\Http\Resources\JsonApiResource;
 use App\Models\Article;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -13,20 +13,20 @@ class ArticleController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index(): ArticleCollection
+    public function index(): JsonApiCollection
     {
         /** @var \Illuminate\Database\Eloquent\Builder $articles */
-        $articles = Article::jsonApiFields('articles', ['title', 'slug', 'content', 'created_at', 'updated_at'])
+        $articles = Article::query()
             ->jsonApiSort(['title', 'slug', 'content', 'created_at', 'updated_at'])
             ->jsonApiFilter(['title', 'slug', 'content', 'created_at', 'updated_at']);
 
-        return ArticleCollection::make($articles->jsonApiPaginate());
+        return JsonApiCollection::make($articles->jsonApiPaginate());
     }
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request): ArticleResource
+    public function store(Request $request): JsonApiResource
     {
         $request->validate([
             'data.type' => ['in:articles'],
@@ -49,21 +49,21 @@ class ArticleController extends Controller
 
         $article = Article::create($attributes);
 
-        return ArticleResource::make($article);
+        return JsonApiResource::make($article);
     }
 
     /**
      * Display the specified resource.
      */
-    public function show(Article $article): ArticleResource
+    public function show(Article $article): JsonApiResource
     {
-        return ArticleResource::make($article);
+        return JsonApiResource::make($article);
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Article $article): ArticleResource
+    public function update(Request $request, Article $article): JsonApiResource
     {
         $request->validate([
             'data.id' => ['in:' . $article->getRouteKey()],
@@ -86,7 +86,7 @@ class ArticleController extends Controller
 
         $article->update($attributes);
 
-        return ArticleResource::make($article);
+        return JsonApiResource::make($article);
     }
 
     /**
