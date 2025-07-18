@@ -25,9 +25,9 @@ class RegisteredUserController extends Controller
         ]);
 
         $user = User::create([
-            'name' => $validated['data.attributes.name'],
-            'email' => $validated['data.attributes.email'],
-            'password' => Hash::make($validated['data.attributes.password']),
+            'name' => $validated['data']['attributes']['name'],
+            'email' => $validated['data']['attributes']['email'],
+            'password' => Hash::make($validated['data']['attributes']['password']),
         ]);
 
         $token = $user->createToken('api-token');
