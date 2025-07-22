@@ -17,7 +17,7 @@ class JsonApiCollection extends ResourceCollection
         return [
             'data' => $this->collection,
             'links' => [
-                'self' => $this->resource->path(),
+                'self' => $request->fullUrl(),
             ],
         ];
     }
