@@ -18,10 +18,10 @@ class CategoryController extends Controller
     {
         /** @var \Illuminate\Database\Eloquent\Builder $categories */
         $categories = Category::with(['author', 'articles'])
-            ->jsonApiSort(['name', 'slug', 'created_at', 'updated_at'])
-            ->jsonApiFilter(['name', 'slug', 'created_at', 'updated_at']);
+            ->withAllowedSorts(['name', 'slug', 'created_at', 'updated_at'])
+            ->withAllowedFilters(['name', 'slug', 'created_at', 'updated_at']);
 
-        return JsonApiCollection::make($categories->jsonApiPaginate());
+        return JsonApiCollection::make($categories->paginateAsJsonApi());
     }
 
     /**

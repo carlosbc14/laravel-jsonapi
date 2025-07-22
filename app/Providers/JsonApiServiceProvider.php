@@ -21,7 +21,7 @@ class JsonApiServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        Builder::macro('jsonApiSort', function (array $allowedSorts = []): Builder {
+        Builder::macro('withAllowedSorts', function (array $allowedSorts = []): Builder {
             /** @var Builder $this */
             if (!request()->filled('sort')) return $this;
 
@@ -39,7 +39,7 @@ class JsonApiServiceProvider extends ServiceProvider
             return $this;
         });
 
-        Builder::macro('jsonApiFilter', function (array $allowedFilters = []): Builder {
+        Builder::macro('withAllowedFilters', function (array $allowedFilters = []): Builder {
             /** @var Builder $this */
             $filters = request()->input('filter', []);
             $operators = ['eq' => '=', 'gt' => '>', 'lt' => '<', 'gte' => '>=', 'lte' => '<='];
@@ -64,7 +64,7 @@ class JsonApiServiceProvider extends ServiceProvider
             return $this;
         });
 
-        Builder::macro('jsonApiPaginate', function (): LengthAwarePaginator {
+        Builder::macro('paginateAsJsonApi', function (): LengthAwarePaginator {
             /** @var Builder $this */
             return $this->paginate(
                 request()->input('page.size', 15),

@@ -19,10 +19,10 @@ class ArticleController extends Controller
     {
         /** @var \Illuminate\Database\Eloquent\Builder $articles */
         $articles = Article::with(['author', 'category'])
-            ->jsonApiSort(['title', 'slug', 'content', 'created_at', 'updated_at'])
-            ->jsonApiFilter(['title', 'slug', 'content', 'created_at', 'updated_at']);
+            ->withAllowedSorts(['title', 'slug', 'content', 'created_at', 'updated_at'])
+            ->withAllowedFilters(['title', 'slug', 'content', 'created_at', 'updated_at']);
 
-        return JsonApiCollection::make($articles->jsonApiPaginate());
+        return JsonApiCollection::make($articles->paginateAsJsonApi());
     }
 
     /**
