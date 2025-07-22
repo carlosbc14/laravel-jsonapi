@@ -35,6 +35,10 @@ class UpdateArticleRequest extends FormRequest
                 'unique:' . \App\Models\Article::class . ',slug,' . $article->id,
             ],
             'data.attributes.content' => ['sometimes', 'string'],
+            'data.relationships.category.data.id' => [
+                'sometimes',
+                'exists:' . \App\Models\Category::class . ',' . (new \App\Models\Category)->getRouteKeyName(),
+            ],
         ];
     }
 }

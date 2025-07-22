@@ -21,6 +21,7 @@ class ArticleFactory extends Factory
             'slug' => fake()->slug(),
             'content' => fake()->paragraphs(3, true),
             'user_id' => \App\Models\User::factory(),
+            'category_id' => \App\Models\Category::factory(),
         ];
     }
 }

@@ -21,6 +21,7 @@ class Article extends Model
         'slug',
         'content',
         'user_id',
+        'category_id',
     ];
 
     /**
@@ -32,10 +33,28 @@ class Article extends Model
     }
 
     /**
+     * Retrieve the model for a bound value.
+     */
+    public function resolveRouteBinding($value, $field = null)
+    {
+        return $this->where($field ?? $this->getRouteKeyName(), $value)
+            ->with(['author', 'category'])
+            ->first();
+    }
+
+    /**
      * Get the user that owns the article.
      */
     public function author(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    /**
+     * Get the category of the article.
+     */
+    public function category(): BelongsTo
+    {
+        return $this->belongsTo(Category::class);
     }
 }

@@ -7,6 +7,7 @@ use App\Http\Requests\UpdateArticleRequest;
 use App\Http\Resources\JsonApiCollection;
 use App\Http\Resources\JsonApiResource;
 use App\Models\Article;
+use App\Models\Category;
 use Illuminate\Http\Response;
 
 class ArticleController extends Controller
@@ -17,7 +18,7 @@ class ArticleController extends Controller
     public function index(): JsonApiCollection
     {
         /** @var \Illuminate\Database\Eloquent\Builder $articles */
-        $articles = Article::query()
+        $articles = Article::with(['author', 'category'])
             ->jsonApiSort(['title', 'slug', 'content', 'created_at', 'updated_at'])
             ->jsonApiFilter(['title', 'slug', 'content', 'created_at', 'updated_at']);
 
@@ -31,6 +32,9 @@ class ArticleController extends Controller
     {
         $attributes = $request->validated()['data']['attributes'];
         $attributes['user_id'] = $request->user()->id;
+
+        $category = Category::where('slug', $request->input('data.relationships.category.data.id'))->first();
+        $attributes['category_id'] = $category->id;
 
         $article = Article::create($attributes);
 
@@ -51,6 +55,11 @@ class ArticleController extends Controller
     public function update(UpdateArticleRequest $request, Article $article): JsonApiResource
     {
         $attributes = $request->validated()['data']['attributes'];
+
+        if ($request->filled('data.relationships.category.data.id')) {
+            $category = Category::where('slug', $request->input('data.relationships.category.data.id'))->first();
+            $attributes['category_id'] = $category->id;
+        }
 
         $article->update($attributes);
 

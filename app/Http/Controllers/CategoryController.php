@@ -17,7 +17,7 @@ class CategoryController extends Controller
     public function index(): JsonApiCollection
     {
         /** @var \Illuminate\Database\Eloquent\Builder $categories */
-        $categories = Category::query()
+        $categories = Category::with(['author', 'articles'])
             ->jsonApiSort(['name', 'slug', 'created_at', 'updated_at'])
             ->jsonApiFilter(['name', 'slug', 'created_at', 'updated_at']);
 

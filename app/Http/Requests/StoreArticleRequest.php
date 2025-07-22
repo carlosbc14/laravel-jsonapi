@@ -32,6 +32,10 @@ class StoreArticleRequest extends FormRequest
                 'unique:' . \App\Models\Article::class . ',slug',
             ],
             'data.attributes.content' => ['required', 'string'],
+            'data.relationships.category.data.id' => [
+                'required',
+                'exists:' . \App\Models\Category::class . ',' . (new \App\Models\Category)->getRouteKeyName(),
+            ],
         ];
     }
 }

@@ -16,7 +16,7 @@ class JsonApiResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        return [
+        $data = [
             'type' => $this->getResourceType(),
             'id' => (string) $this->getRouteKey(),
             'attributes' => $this->getFilteredAttributes($request),
@@ -24,6 +24,14 @@ class JsonApiResource extends JsonResource
                 'self' => route($this->getResourceType() . '.show', $this->getRouteKey()),
             ],
         ];
+
+        $relationships = $this->getResourceRelationships();
+
+        if (!empty($relationships)) {
+            $data['relationships'] = $relationships;
+        }
+
+        return $data;
     }
 
     /**
@@ -67,5 +75,32 @@ class JsonApiResource extends JsonResource
         if (!$fields) return $attributes;
 
         return Arr::only($attributes, $fields); //TODO: Validate the fields
+    }
+
+    protected function getResourceRelationships(): array
+    {
+        $relationships = [];
+
+        foreach ($this->resource->getRelations() as $relation => $model) {
+            if ($model instanceof \Illuminate\Database\Eloquent\Model) {
+                $relationships[$relation] = [
+                    'data' => [
+                        'type' => $model->getTable(),
+                        'id' => (string) $model->getRouteKey(),
+                    ],
+                ];
+            } elseif ($model instanceof \Illuminate\Support\Collection) {
+                $relationships[$relation] = [
+                    'data' => $model->map(function ($item) {
+                        return [
+                            'type' => $item->getTable(),
+                            'id' => (string) $item->getRouteKey(),
+                        ];
+                    })->all(),
+                ];
+            }
+        }
+
+        return $relationships;
     }
 }
