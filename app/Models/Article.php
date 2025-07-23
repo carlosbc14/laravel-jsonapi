@@ -38,16 +38,16 @@ class Article extends Model
     public function resolveRouteBinding($value, $field = null)
     {
         return $this->where($field ?? $this->getRouteKeyName(), $value)
-            ->with(['author', 'category'])
+            ->with(['user', 'category'])
             ->first();
     }
 
     /**
      * Get the user that owns the article.
      */
-    public function author(): BelongsTo
+    public function user(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'user_id');
+        return $this->belongsTo(User::class);
     }
 
     /**

@@ -18,7 +18,7 @@ class ArticleController extends Controller
     public function index(): JsonApiCollection
     {
         /** @var \Illuminate\Database\Eloquent\Builder $articles */
-        $articles = Article::with(['author', 'category'])
+        $articles = Article::with(['user', 'category'])
             ->withAllowedSorts(['title', 'slug', 'content', 'created_at', 'updated_at'])
             ->withAllowedFilters(['title', 'slug', 'content', 'created_at', 'updated_at']);
 
