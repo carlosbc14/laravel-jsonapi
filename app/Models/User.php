@@ -49,6 +49,16 @@ class User extends Authenticatable
     }
 
     /**
+     * Retrieve the model for a bound value.
+     */
+    public function resolveRouteBinding($value, $field = null)
+    {
+        return $this->where($field ?? $this->getRouteKeyName(), $value)
+            ->with(['articles', 'categories'])
+            ->first();
+    }
+
+    /**
      * Get the articles associated with the user.
      */
     public function articles(): HasMany
