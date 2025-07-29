@@ -37,7 +37,7 @@ class Category extends Model
     public function resolveRouteBinding($value, $field = null)
     {
         return $this->where($field ?? $this->getRouteKeyName(), $value)
-            ->with(['user', 'articles'])
+            ->with(['user', 'articles.user'])
             ->first();
     }
 

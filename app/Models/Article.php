@@ -38,7 +38,7 @@ class Article extends Model
     public function resolveRouteBinding($value, $field = null)
     {
         return $this->where($field ?? $this->getRouteKeyName(), $value)
-            ->with(['user', 'category'])
+            ->with(['user', 'category.user'])
             ->first();
     }
 
