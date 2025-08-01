@@ -80,7 +80,7 @@ return Application::configure(basePath: dirname(__DIR__))
                                 : $e->getMessage(),
                         ],
                     ],
-                ], '500');
+                ], 500);
             }
         });
     })->create();
