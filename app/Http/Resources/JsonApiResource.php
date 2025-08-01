@@ -53,32 +53,21 @@ class JsonApiResource extends JsonResource
         return $this->resource->getTable();
     }
 
-    protected function getResourceAttributes(): array
-    {
-        $attributes = $this->resource->getAttributes();
-
-        unset($attributes['id']);
-
-        return $attributes;
-    }
-
-    protected function getRequestedFields(Request $request): array|null
+    protected function getFilteredAttributes(Request $request): array
     {
         $type = $this->getResourceType();
 
-        if (!$request->filled("fields.$type")) return null;
+        $attributes = $this->resource->attributesToArray();
+        unset($attributes['id']);
 
-        return explode(',', $request->input("fields.$type"));
-    }
+        if (!$request->filled("fields.$type")) return $attributes;
 
-    protected function getFilteredAttributes(Request $request): array
-    {
-        $attributes = $this->getResourceAttributes();
-        $fields = $this->getRequestedFields($request);
+        $fields = explode(',', $request->input("fields.$type"));
 
-        if (!$fields) return $attributes;
+        $invalidFields = array_diff($fields, array_keys($attributes));
+        abort_unless(empty($invalidFields), 400, "Invalid $type fields.");
 
-        return Arr::only($attributes, $fields); //TODO: Validate the fields
+        return Arr::only($attributes, $fields);
     }
 
     protected function getResourceRelationships(): array
