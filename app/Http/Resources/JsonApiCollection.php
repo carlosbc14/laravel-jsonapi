@@ -14,6 +14,10 @@ class JsonApiCollection extends ResourceCollection
      */
     public function toArray(Request $request): array
     {
+        if ($request->filled('include')) {
+            $this->with['included'] = $this->getIncludedCollection($request);
+        }
+
         return [
             'data' => $this->collection,
             'links' => [
@@ -21,4 +25,24 @@ class JsonApiCollection extends ResourceCollection
             ],
         ];
     }
+
+    protected function getIncludedCollection(Request $request): array
+    {
+        $includedMap = [];
+
+        foreach ($this->collection as $resource) {
+            $includedItems = JsonApiResource::make($resource)->getIncludedResources($request);
+
+            foreach ($includedItems as $item) {
+                $key = $item->resource->getTable() . ':' . $item->resource->getRouteKey();
+
+                if (!isset($includedMap[$key])) {
+                    $includedMap[$key] = $item;
+                }
+            }
+        }
+
+        return array_values($includedMap);
+    }
+
 }

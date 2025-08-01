@@ -31,6 +31,10 @@ class JsonApiResource extends JsonResource
             $data['relationships'] = $relationships;
         }
 
+        if ($request->filled('include')) {
+            $this->with['included'] = $this->getIncludedResources($request);
+        }
+
         return $data;
     }
 
@@ -102,5 +106,49 @@ class JsonApiResource extends JsonResource
         }
 
         return $relationships;
+    }
+
+    protected function getIncludedResources(Request $request): array
+    {
+        if (!$request->filled('include')) return [];
+
+        $includes = explode(',', $request->input('include'));
+        $includedMap = [];
+
+        foreach ($includes as $include) {
+            $parts = explode('.', $include);
+            $this->extractIncluded($this->resource, $parts, $includedMap);
+        }
+
+        return array_values($includedMap);
+    }
+
+    protected function extractIncluded($model, array $parts, array &$includedMap): void
+    {
+        $relationName = array_shift($parts);
+        if (!$model->relationLoaded($relationName)) return;
+
+        $related = $model->$relationName;
+
+        $addIncluded = function ($item) use (&$includedMap, $parts) {
+            $resource = static::make($item);
+            $key = $item->getTable() . ':' . $item->getRouteKey();
+
+            if (!isset($includedMap[$key])) {
+                $includedMap[$key] = $resource;
+
+                if (!empty($parts)) {
+                    $this->extractIncluded($item, $parts, $includedMap);
+                }
+            }
+        };
+
+        if ($related instanceof \Illuminate\Database\Eloquent\Model) {
+            $addIncluded($related);
+        } elseif ($related instanceof \Illuminate\Support\Collection) {
+            foreach ($related as $item) {
+                $addIncluded($item);
+            }
+        }
     }
 }
