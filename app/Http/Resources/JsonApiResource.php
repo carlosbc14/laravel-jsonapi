@@ -64,9 +64,6 @@ class JsonApiResource extends JsonResource
 
         $fields = explode(',', $request->input("fields.$type"));
 
-        $invalidFields = array_diff($fields, array_keys($attributes));
-        abort_unless(empty($invalidFields), 400, "Invalid $type fields.");
-
         return Arr::only($attributes, $fields);
     }
 

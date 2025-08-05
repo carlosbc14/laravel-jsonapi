@@ -32,16 +32,6 @@ class Category extends Model
     }
 
     /**
-     * Retrieve the model for a bound value.
-     */
-    public function resolveRouteBinding($value, $field = null)
-    {
-        return $this->where($field ?? $this->getRouteKeyName(), $value)
-            ->with(['user', 'articles.user'])
-            ->first();
-    }
-
-    /**
      * Get the user that owns the category.
      */
     public function user(): BelongsTo

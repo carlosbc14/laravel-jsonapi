@@ -2,10 +2,13 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\StoreCategoryRequest;
-use App\Http\Requests\UpdateCategoryRequest;
+use App\Http\Requests\Category\IndexCategoryRequest;
+use App\Http\Requests\Category\ShowCategoryRequest;
+use App\Http\Requests\Category\StoreCategoryRequest;
+use App\Http\Requests\Category\UpdateCategoryRequest;
 use App\Http\Resources\JsonApiCollection;
 use App\Http\Resources\JsonApiResource;
+use App\Models\Article;
 use App\Models\Category;
 use Illuminate\Http\Response;
 
@@ -14,12 +17,11 @@ class CategoryController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index(): JsonApiCollection
+    public function index(IndexCategoryRequest $request): JsonApiCollection
     {
-        /** @var \Illuminate\Database\Eloquent\Builder $categories */
-        $categories = Category::with(['user', 'articles'])
-            ->withAllowedSorts(['name', 'slug', 'created_at', 'updated_at'])
-            ->withAllowedFilters(['name', 'slug', 'created_at', 'updated_at']);
+        $query = Category::query();
+
+        $categories = $query->with($request->getIncludes())->withAllowedSorts()->withAllowedFilters();
 
         return JsonApiCollection::make($categories->paginateAsJsonApi());
     }
@@ -32,16 +34,28 @@ class CategoryController extends Controller
         $attributes = $request->validated()['data']['attributes'];
         $attributes['user_id'] = $request->user()->id;
 
-        $article = Category::create($attributes);
+        $category = Category::create($attributes);
 
-        return JsonApiResource::make($article);
+        if ($request->filled('data.relationships.articles.data')) {
+            $articles = $request->input('data.relationships.articles.data');
+            Article::where('category_id', $category->id)->update(['category_id' => null]);
+            Article::whereIn('slug', array_column($articles, 'id'))->update(['category_id' => $category->id]);
+        }
+
+        $includes = $request->getIncludes();
+        if (!empty($includes)) $category->load($includes);
+
+        return JsonApiResource::make($category);
     }
 
     /**
      * Display the specified resource.
      */
-    public function show(Category $category): JsonApiResource
+    public function show(ShowCategoryRequest $request, Category $category): JsonApiResource
     {
+        $includes = $request->getIncludes();
+        if (!empty($includes)) $category->load($includes);
+
         return JsonApiResource::make($category);
     }
 
@@ -50,9 +64,19 @@ class CategoryController extends Controller
      */
     public function update(UpdateCategoryRequest $request, Category $category): JsonApiResource
     {
-        $attributes = $request->validated()['data']['attributes'];
+        if ($request->filled('data.attributes')) {
+            $attributes = $request->validated()['data']['attributes'];
+            $category->update($attributes);
+        }
 
-        $category->update($attributes);
+        if ($request->filled('data.relationships.articles.data')) {
+            $articles = $request->input('data.relationships.articles.data');
+            Article::where('category_id', $category->id)->update(['category_id' => null]);
+            Article::whereIn('slug', array_column($articles, 'id'))->update(['category_id' => $category->id]);
+        }
+
+        $includes = $request->getIncludes();
+        if (!empty($includes)) $category->load($includes);
 
         return JsonApiResource::make($category);
     }

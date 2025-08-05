@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\User\IndexUserRequest;
+use App\Http\Requests\User\ShowUserRequest;
 use App\Http\Resources\JsonApiCollection;
 use App\Http\Resources\JsonApiResource;
 use App\Models\User;
@@ -11,12 +13,11 @@ class UserController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index(): JsonApiCollection
+    public function index(IndexUserRequest $request): JsonApiCollection
     {
-        /** @var \Illuminate\Database\Eloquent\Builder $categories */
-        $users = User::with(['articles', 'categories'])
-            ->withAllowedSorts(['name', 'email', 'created_at', 'updated_at'])
-            ->withAllowedFilters(['name', 'email', 'created_at', 'updated_at']);
+        $query = User::query();
+
+        $users = $query->with($request->getIncludes())->withAllowedSorts()->withAllowedFilters();
 
         return JsonApiCollection::make($users->paginateAsJsonApi());
     }
@@ -24,8 +25,11 @@ class UserController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(User $user): JsonApiResource
+    public function show(ShowUserRequest $request, User $user): JsonApiResource
     {
+        $includes = $request->getIncludes();
+        if (!empty($includes)) $user->load($includes);
+
         return JsonApiResource::make($user);
     }
 }

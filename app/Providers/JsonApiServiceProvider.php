@@ -21,7 +21,7 @@ class JsonApiServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        Builder::macro('withAllowedSorts', function (array $allowedSorts = []): Builder {
+        Builder::macro('withAllowedSorts', function (): Builder {
             /** @var Builder $this */
             if (!request()->filled('sort')) return $this;
 
@@ -31,22 +31,18 @@ class JsonApiServiceProvider extends ServiceProvider
                 $sortDirection = str_starts_with($sortField, '-') ? 'desc' : 'asc';
                 $sortField = ltrim($sortField, '-');
 
-                abort_unless(empty($allowedSorts) || in_array($sortField, $allowedSorts), 400, 'Invalid sort field.');
-
                 $this->orderBy($sortField, $sortDirection);
             }
 
             return $this;
         });
 
-        Builder::macro('withAllowedFilters', function (array $allowedFilters = []): Builder {
+        Builder::macro('withAllowedFilters', function (): Builder {
             /** @var Builder $this */
             $filters = request()->input('filter', []);
             $operators = ['eq' => '=', 'gt' => '>', 'lt' => '<', 'gte' => '>=', 'lte' => '<='];
 
             foreach ($filters as $filterField => $filterValue) {
-                abort_unless(empty($allowedFilters) || in_array($filterField, $allowedFilters), 400, 'Invalid filter field.');
-
                 if (is_array($filterValue)) {
                     foreach ($filterValue as $op => $value) {
                         if (array_key_exists($op, $operators)) {

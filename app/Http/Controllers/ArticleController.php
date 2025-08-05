@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\StoreArticleRequest;
-use App\Http\Requests\UpdateArticleRequest;
+use App\Http\Requests\Article\IndexArticleRequest;
+use App\Http\Requests\Article\ShowArticleRequest;
+use App\Http\Requests\Article\StoreArticleRequest;
+use App\Http\Requests\Article\UpdateArticleRequest;
 use App\Http\Resources\JsonApiCollection;
 use App\Http\Resources\JsonApiResource;
 use App\Models\Article;
@@ -15,12 +17,11 @@ class ArticleController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index(): JsonApiCollection
+    public function index(IndexArticleRequest $request): JsonApiCollection
     {
-        /** @var \Illuminate\Database\Eloquent\Builder $articles */
-        $articles = Article::with(['user', 'category'])
-            ->withAllowedSorts(['title', 'slug', 'content', 'created_at', 'updated_at'])
-            ->withAllowedFilters(['title', 'slug', 'content', 'created_at', 'updated_at']);
+        $query = Article::query();
+
+        $articles = $query->with($request->getIncludes())->withAllowedSorts()->withAllowedFilters();
 
         return JsonApiCollection::make($articles->paginateAsJsonApi());
     }
@@ -38,14 +39,20 @@ class ArticleController extends Controller
 
         $article = Article::create($attributes);
 
+        $includes = $request->getIncludes();
+        if (!empty($includes)) $article->load($includes);
+
         return JsonApiResource::make($article);
     }
 
     /**
      * Display the specified resource.
      */
-    public function show(Article $article): JsonApiResource
+    public function show(ShowArticleRequest $request, Article $article): JsonApiResource
     {
+        $includes = $request->getIncludes();
+        if (!empty($includes)) $article->load($includes);
+
         return JsonApiResource::make($article);
     }
 
@@ -54,14 +61,18 @@ class ArticleController extends Controller
      */
     public function update(UpdateArticleRequest $request, Article $article): JsonApiResource
     {
-        $attributes = $request->validated()['data']['attributes'];
+        if ($request->filled('data.attributes')) {
+            $attributes = $request->validated()['data']['attributes'];
+            $article->update($attributes);
+        }
 
         if ($request->filled('data.relationships.category.data.id')) {
             $category = Category::where('slug', $request->input('data.relationships.category.data.id'))->first();
             $attributes['category_id'] = $category->id;
         }
 
-        $article->update($attributes);
+        $includes = $request->getIncludes();
+        if (!empty($includes)) $article->load($includes);
 
         return JsonApiResource::make($article);
     }
