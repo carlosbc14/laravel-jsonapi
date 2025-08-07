@@ -7,6 +7,9 @@ use App\Http\Requests\User\ShowUserRequest;
 use App\Http\Resources\JsonApiCollection;
 use App\Http\Resources\JsonApiResource;
 use App\Models\User;
+use App\Scopes\Filter;
+use App\Scopes\Paginate;
+use App\Scopes\Sort;
 
 class UserController extends Controller
 {
@@ -17,9 +20,12 @@ class UserController extends Controller
     {
         $query = User::query();
 
-        $users = $query->with($request->getIncludes())->withAllowedSorts()->withAllowedFilters();
+        $users = $query->with($request->getIncludes())
+            ->tap(new Sort($request->getSort()))
+            ->tap(new Filter($request->getFilters()));
 
-        return JsonApiCollection::make($users->paginateAsJsonApi());
+        $pagination = $request->getPagination();
+        return JsonApiCollection::make($users->pipe(new Paginate($pagination['size'], $pagination['number'])));
     }
 
     /**

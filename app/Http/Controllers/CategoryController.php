@@ -10,6 +10,9 @@ use App\Http\Resources\JsonApiCollection;
 use App\Http\Resources\JsonApiResource;
 use App\Models\Article;
 use App\Models\Category;
+use App\Scopes\Filter;
+use App\Scopes\Paginate;
+use App\Scopes\Sort;
 use Illuminate\Http\Response;
 
 class CategoryController extends Controller
@@ -21,9 +24,12 @@ class CategoryController extends Controller
     {
         $query = Category::query();
 
-        $categories = $query->with($request->getIncludes())->withAllowedSorts()->withAllowedFilters();
+        $categories = $query->with($request->getIncludes())
+            ->tap(new Sort($request->getSort()))
+            ->tap(new Filter($request->getFilters()));
 
-        return JsonApiCollection::make($categories->paginateAsJsonApi());
+        $pagination = $request->getPagination();
+        return JsonApiCollection::make($categories->pipe(new Paginate($pagination['size'], $pagination['number'])));
     }
 
     /**
