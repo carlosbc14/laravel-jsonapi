@@ -230,20 +230,7 @@ abstract class JsonApiRequest extends FormRequest
      */
     public function getSort(): array
     {
-        if (!$this->filled('sort')) return [];
-
-        $sorts = [];
-        $sortFields = explode(',', $this->input('sort'));
-
-        foreach ($sortFields as $field) {
-            if (str_starts_with($field, '-')) {
-                $sorts[substr($field, 1)] = 'desc';
-            } else {
-                $sorts[$field] = 'asc';
-            }
-        }
-
-        return $sorts;
+        return $this->filled('sort') ? explode(',', $this->input('sort')) : [];
     }
 
     /**
