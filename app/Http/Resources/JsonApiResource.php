@@ -4,15 +4,44 @@ namespace App\Http\Resources;
 
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Arr;
 
-class JsonApiResource extends JsonResource
+abstract class JsonApiResource extends JsonResource
 {
     /**
+     * Create a new anonymous resource collection.
+     */
+    public static function collection($resources): AnonymousResourceCollection
+    {
+        $collection = parent::collection($resources);
+
+        if (request()->filled('include')) {
+            $includedMap = [];
+
+            foreach ($collection as $resource) {
+                $includedItems = $resource->getIncludedResources(request());
+
+                foreach ($includedItems as $item) {
+                    $key = $item->resource->getTable() . ':' . $item->resource->getRouteKey();
+
+                    if (!isset($includedMap[$key])) {
+                        $includedMap[$key] = $item;
+                    }
+                }
+            }
+
+            $collection->with['included'] = array_values($includedMap);
+        }
+
+        $collection->with['links'] = ['self' => request()->fullUrl()];
+
+        return $collection;
+    }
+
+    /**
      * Transform the resource into an array.
-     *
-     * @return array<string, mixed>
      */
     public function toArray(Request $request): array
     {
@@ -48,9 +77,11 @@ class JsonApiResource extends JsonResource
         }
     }
 
-    protected function getResourceType(): string
+    abstract protected function getResourceType(): string;
+
+    protected function getAvailableRelationships(): array
     {
-        return $this->resource->getTable();
+        return [];
     }
 
     protected function getFilteredAttributes(Request $request): array
@@ -71,23 +102,25 @@ class JsonApiResource extends JsonResource
     {
         $relationships = [];
 
-        foreach ($this->resource->getRelations() as $relation => $model) {
-            if ($model instanceof \Illuminate\Database\Eloquent\Model) {
-                $relationships[$relation] = [
-                    'data' => [
-                        'type' => $model->getTable(),
-                        'id' => (string) $model->getRouteKey(),
-                    ],
-                ];
-            } elseif ($model instanceof \Illuminate\Support\Collection) {
-                $relationships[$relation] = [
-                    'data' => $model->map(function ($item) {
-                        return [
-                            'type' => $item->getTable(),
-                            'id' => (string) $item->getRouteKey(),
-                        ];
-                    })->all(),
-                ];
+        foreach ($this->getAvailableRelationships() as $relation) {
+            $relationships[$relation] = [];
+
+            if ($this->resource->relationLoaded($relation)) {
+                $related = $this->resource->$relation;
+
+                if ($related instanceof \Illuminate\Database\Eloquent\Model) {
+                    $relationships[$relation]['data'] = [
+                        'type' => $related->getTable(),
+                        'id'   => (string) $related->getRouteKey(),
+                    ];
+                } elseif ($related instanceof \Illuminate\Support\Collection) {
+                    $relationships[$relation]['data'] = $related->map(fn ($item) => [
+                        'type' => $item->getTable(),
+                        'id'   => (string) $item->getRouteKey(),
+                    ])->all();
+                } else {
+                    $relationships[$relation]['data'] = null;
+                }
             }
         }
 

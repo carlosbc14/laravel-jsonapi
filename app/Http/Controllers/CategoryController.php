@@ -6,13 +6,13 @@ use App\Http\Requests\Category\IndexCategoryRequest;
 use App\Http\Requests\Category\ShowCategoryRequest;
 use App\Http\Requests\Category\StoreCategoryRequest;
 use App\Http\Requests\Category\UpdateCategoryRequest;
-use App\Http\Resources\JsonApiCollection;
-use App\Http\Resources\JsonApiResource;
+use App\Http\Resources\CategoryResource;
 use App\Models\Article;
 use App\Models\Category;
 use App\Scopes\Filter;
 use App\Scopes\Paginate;
 use App\Scopes\Sort;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Http\Response;
 
 class CategoryController extends Controller
@@ -20,7 +20,7 @@ class CategoryController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index(IndexCategoryRequest $request): JsonApiCollection
+    public function index(IndexCategoryRequest $request): AnonymousResourceCollection
     {
         $query = Category::query();
 
@@ -29,13 +29,13 @@ class CategoryController extends Controller
             ->tap(new Filter($request->getFilters()));
 
         $pagination = $request->getPagination();
-        return JsonApiCollection::make($categories->pipe(new Paginate($pagination['size'], $pagination['number'])));
+        return CategoryResource::collection($categories->pipe(new Paginate($pagination['size'], $pagination['number'])));
     }
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(StoreCategoryRequest $request): JsonApiResource
+    public function store(StoreCategoryRequest $request): CategoryResource
     {
         $attributes = $request->validated()['data']['attributes'];
         $attributes['user_id'] = $request->user()->id;
@@ -51,24 +51,24 @@ class CategoryController extends Controller
         $includes = $request->getIncludes();
         if (!empty($includes)) $category->load($includes);
 
-        return JsonApiResource::make($category);
+        return CategoryResource::make($category);
     }
 
     /**
      * Display the specified resource.
      */
-    public function show(ShowCategoryRequest $request, Category $category): JsonApiResource
+    public function show(ShowCategoryRequest $request, Category $category): CategoryResource
     {
         $includes = $request->getIncludes();
         if (!empty($includes)) $category->load($includes);
 
-        return JsonApiResource::make($category);
+        return CategoryResource::make($category);
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(UpdateCategoryRequest $request, Category $category): JsonApiResource
+    public function update(UpdateCategoryRequest $request, Category $category): CategoryResource
     {
         if ($request->filled('data.attributes')) {
             $attributes = $request->validated()['data']['attributes'];
@@ -84,7 +84,7 @@ class CategoryController extends Controller
         $includes = $request->getIncludes();
         if (!empty($includes)) $category->load($includes);
 
-        return JsonApiResource::make($category);
+        return CategoryResource::make($category);
     }
 
     /**
